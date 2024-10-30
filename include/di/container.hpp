@@ -101,7 +101,7 @@ std::enable_if_t<!is_vector<T> && is_pointer<T>, T> Container::createImpl(Args* 
   if (auto it = args ? args->find<T>() : ArgsIter()) {
     return std::move(args->get<T>(it));
   }
-  using E = pointer_traits<T>::element_type;
+  using E = typename pointer_traits<T>::element_type;
   auto factory = findFactory<E>();
   return createObject<T>(factory, args);
 }
@@ -147,8 +147,8 @@ template <typename T>
 std::enable_if_t<is_vector<T>, T> Container::createImpl(Args* args)
 {
   using D = std::decay_t<T>;
-  using P = vector_traits<D>::element_type;
-  using E = std::pointer_traits<P>::element_type;
+  using P = typename vector_traits<D>::element_type;
+  using E = typename std::pointer_traits<P>::element_type;
   auto range = multiFactories_.equal_range(typeid(E));
   if (range.first == range.second) {
     range = multiFactories_.equal_range(typeid(std::decay_t<E>));
@@ -187,7 +187,7 @@ std::enable_if_t<std::is_pointer_v<T>, T> Container::createObject(Factory* facto
 template <typename T>
 std::enable_if_t<is_shared_ptr<T>, T> Container::createObject(Factory* factory, Args* args)
 {
-  using E = std::pointer_traits<T>::element_type;
+  using E = typename std::pointer_traits<T>::element_type;
   return std::static_pointer_cast<E>(factory->createShared(this, args));
 }
 
@@ -195,7 +195,7 @@ std::enable_if_t<is_shared_ptr<T>, T> Container::createObject(Factory* factory, 
 template <typename T>
 std::enable_if_t<is_unique_ptr<T>, T> Container::createObject(Factory* factory, Args* args)
 {
-  using E = std::pointer_traits<T>::element_type;
+  using E = typename std::pointer_traits<T>::element_type;
   using D = std::decay_t<E>;
   return std::unique_ptr<E>(static_cast<D*>(factory->createUnique(this, args)));
 }

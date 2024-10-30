@@ -53,7 +53,7 @@ constexpr bool is_vector = vector_traits<std::decay_t<T>>::value;
 template <typename T>
 struct pointer_traits
 {
-  using element_type = std::pointer_traits<T>::element_type;
+  using element_type = typename std::pointer_traits<T>::element_type;
 };
 
 template <typename T>
