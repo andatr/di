@@ -5,7 +5,6 @@
 
 #include "di/container.h"
 #include "di/factory.hpp"
-#include "di/exception.h"
 
 namespace yaga {
 namespace di {
