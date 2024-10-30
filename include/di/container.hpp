@@ -21,7 +21,7 @@ struct LambdaHelper<std::function<Ret(Params...)>>
   {
     return [container](Params&&... params) {
       Args args(std::forward<Params>(params)...);
-      return container->createImpl<Ret>(&args);
+      return container->template createImpl<Ret>(&args);
     };
   }
 };
