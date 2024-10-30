@@ -1,6 +1,8 @@
 #ifndef YAGA_DI_CONTAINER_HPP
 #define YAGA_DI_CONTAINER_HPP
 
+#include <stdexcept>
+
 #include "di/container.h"
 #include "di/factory.hpp"
 #include "di/exception.h"
@@ -75,7 +77,7 @@ void Container::throwIfExists()
 {
   using D = std::decay_t<T>;
   auto it = factories_.find(typeid(D));
-  if (it != factories_.end()) THROW("Class {} already registered", typeid(T).name());
+  if (it != factories_.end()) throw std::runtime_error(std::string("Class ") + typeid(T).name() + " already registered");
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -152,7 +154,7 @@ std::enable_if_t<is_vector<T>, T> Container::createImpl(Args* args)
   if (range.first == range.second) {
     range = multiFactories_.equal_range(typeid(std::decay_t<E>));
   }
-  if (range.first == range.second) THROW("Class \"%1%\" not registered", typeid(T).name());
+  if (range.first == range.second) throw std::runtime_error(std::string("Class ") + typeid(T).name() + " not registered");
   D result {};
   for (decltype(range.first) it = range.first; it != range.second; ++it) {
     result.push_back(createObject<P>(it->second.get(), args));
@@ -169,7 +171,7 @@ Factory* Container::findFactory(bool throwEx)
     it = factories_.find(typeid(std::decay_t<T>));
   }
   if (it == factories_.end()) {
-    if (throwEx) THROW("Class {} not registered", typeid(T).name());
+    if (throwEx) throw std::runtime_error(std::string("Class ") + typeid(T).name() + " not registered");
     return nullptr;
   }
   return it->second.get();
