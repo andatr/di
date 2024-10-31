@@ -180,7 +180,7 @@ Factory* Container::findFactory(bool throwEx)
 template <typename T>
 std::enable_if_t<std::is_pointer_v<T>, T> Container::createObject(Factory* factory, Args* args) 
 {
-  return static_cast<T>(factory->createPure(this, args));
+  return std::launder(static_cast<T>(factory->createPure(this, args)));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -197,7 +197,7 @@ std::enable_if_t<is_unique_ptr<T>, T> Container::createObject(Factory* factory, 
 {
   using E = typename std::pointer_traits<T>::element_type;
   using D = std::decay_t<E>;
-  return std::unique_ptr<E>(static_cast<D*>(factory->createUnique(this, args)));
+  return std::unique_ptr<E>(std::launder(static_cast<D*>(factory->createUnique(this, args))));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

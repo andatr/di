@@ -23,14 +23,16 @@ public:
 template <typename I, typename T>
 void* UniqueFactory<I, T>::createPure(Container* container, Args* args)
 {
-  return dynamic_cast<I*>(ObjectFactory::createPtr<T>(container, args, init_));
+  I* ptr = ObjectFactory::createPtr<T>(container, args, init_);
+  return ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 std::shared_ptr<void> UniqueFactory<I, T>::createShared(Container* container, Args* args)
 {
-  return std::shared_ptr<I>(ObjectFactory::createPtr<T>(container, args, init_));
+  std::shared_ptr<I> ptr = std::shared_ptr<I>(ObjectFactory::createPtr<T>(container, args, init_));
+  return ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

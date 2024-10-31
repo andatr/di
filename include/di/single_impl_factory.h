@@ -57,21 +57,24 @@ std::shared_ptr<T> SingleImlpFactory<I, T>::getInstance(Container* container, Ar
 template <typename I, typename T>
 void* SingleImlpFactory<I, T>::createPure(Container* container, Args* args)
 {
-  return static_cast<I*>(getInstance(container, args).get());
+  I* ptr = getInstance(container, args).get();
+  return ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 std::shared_ptr<void> SingleImlpFactory<I, T>::createShared(Container* container, Args* args)
 {
-  return std::static_pointer_cast<I>(getInstance(container, args));
+  std::shared_ptr<I> ptr = getInstance(container, args);
+  return ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 void* SingleImlpFactory<I, T>::createUnique(Container* container, Args* args)
 {
-  return dynamic_cast<I*>(ObjectFactory::createPtr<T>(container, args, init_));
+  I* ptr = ObjectFactory::createPtr<T>(container, args, init_);
+  return ptr;
 }
 
 } // !namespace di

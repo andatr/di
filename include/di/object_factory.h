@@ -89,6 +89,8 @@ template <typename T, int... N>
 struct ObjectFactoryPtrHelper<T, std::integer_sequence<int, N...>>
 {
   static T* createPtr(Container* container, Args* args, bool init) { 
+    (void)container;
+    (void)args;
     T* ptr = new T(CtorArg<T, N>{ container, args }...);
     if (init) initPtr(ptr, 0);
     return ptr;
@@ -103,6 +105,8 @@ template <typename T, int... N>
 struct ObjectFactoryHelper<T, std::integer_sequence<int, N...>>
 {
   static T create(Container* container, Args* args, bool init) { 
+    (void)container;
+    (void)args;
     T obj(CtorArg<T, N>{ container, args }...);
     if (init) initCopy(obj, 0);
     return obj;
