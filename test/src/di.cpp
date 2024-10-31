@@ -1,4 +1,5 @@
 #include "di/di.h"
+#include <iostream>
 #include <string>
 #include <boost/test/unit_test.hpp>
 
@@ -845,6 +846,7 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   Dependency2* inst4 = nullptr;
   {
     di::Container container;
+    std::cout << typeid(int).name() << std::endl;
     container.addMulti<IDependency, Dependency1>();
     container.addMulti<IDependency, Dependency2>();
     auto vector1 = container.create<std::vector<IDependency*>>();
