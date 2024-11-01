@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(DoubleDependencySingleImpl)
 // -----------------------------------------------------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
 {
-  /*Dependency1* inst1 = nullptr;
+  Dependency1* inst1 = nullptr;
   Dependency2* inst2 = nullptr;
   Dependency1* inst3 = nullptr;
   Dependency2* inst4 = nullptr;
@@ -852,7 +852,13 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
     auto vector1 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector1.size() == 2);
     inst1 = dynamic_cast<Dependency1*>(vector1[0]);
+    if (inst1 == nullptr) {
+      inst1 = dynamic_cast<Dependency1*>(vector1[1]);
+    }
     inst2 = dynamic_cast<Dependency2*>(vector1[1]);
+    if (inst2 == nullptr) {
+      inst2 = dynamic_cast<Dependency2*>(vector1[0]);
+    }
     BOOST_TEST(inst1 != nullptr);
     BOOST_TEST(inst2 != nullptr);
     inst1->str() = "instance1";
@@ -873,9 +879,9 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   delete inst1;
   delete inst2;
   delete inst3;
-  delete inst4;*/
+  delete inst4;
 
-  IDependency* instance1 = new Dependency1();
+  /*IDependency* instance1 = new Dependency1();
   IDependency* instance2 = new Dependency2();
   void* voidPtr = instance1;
   auto instance11 = static_cast<IDependency*>(voidPtr);
@@ -888,7 +894,7 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   BOOST_TEST(inst2 != nullptr);
   BOOST_TEST(inst11 != nullptr);
   delete instance1;
-  delete instance2;
+  delete instance2;*/
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
