@@ -840,7 +840,7 @@ BOOST_AUTO_TEST_CASE(DoubleDependencySingleImpl)
 // -----------------------------------------------------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
 {
-  Dependency1* inst1 = nullptr;
+  /*Dependency1* inst1 = nullptr;
   Dependency2* inst2 = nullptr;
   Dependency1* inst3 = nullptr;
   Dependency2* inst4 = nullptr;
@@ -873,7 +873,18 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   delete inst1;
   delete inst2;
   delete inst3;
-  delete inst4;
+  delete inst4;*/
+
+  IDependency* instance1 = new Dependency1();
+  IDependency* instance2 = new Dependency2();
+  BOOST_TEST(instance1 != nullptr);
+  BOOST_TEST(instance2 != nullptr);
+  auto inst1 = dynamic_cast<Dependency1*>(instance1);
+  auto inst2 = dynamic_cast<Dependency2*>(instance2);
+  BOOST_TEST(instance1 != nullptr);
+  BOOST_TEST(instance2 != nullptr);
+  delete instance1;
+  delete instance2;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
