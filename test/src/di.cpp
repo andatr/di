@@ -877,12 +877,16 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
 
   IDependency* instance1 = new Dependency1();
   IDependency* instance2 = new Dependency2();
-  BOOST_TEST(instance1 != nullptr);
-  BOOST_TEST(instance2 != nullptr);
-  auto inst1 = dynamic_cast<Dependency1*>(instance1);
-  auto inst2 = dynamic_cast<Dependency2*>(instance2);
+  void* voidPtr = instance1;
+  auto instance11 = static_cast<IDependency*>(voidPtr);
+
+  auto inst1  = dynamic_cast<Dependency1*>(instance1);
+  auto inst2  = dynamic_cast<Dependency2*>(instance2);
+  auto inst11 = dynamic_cast<Dependency1*>(instance11);
+
   BOOST_TEST(inst1 != nullptr);
   BOOST_TEST(inst2 != nullptr);
+  BOOST_TEST(inst11 != nullptr);
   delete instance1;
   delete instance2;
 }
