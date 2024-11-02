@@ -838,6 +838,14 @@ BOOST_AUTO_TEST_CASE(DoubleDependencySingleImpl)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+T* getElementPtr(std::vector<IDependency*>& vector)
+{
+  T* element = dynamic_cast<T*>(vector[0]);
+  return element ? element : dynamic_cast<T*>(vector[1]);
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
 {
   Dependency1* inst1 = nullptr;
@@ -851,22 +859,16 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
     container.addMulti<IDependency, Dependency2>();
     auto vector1 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector1.size() == 2);
-    inst1 = dynamic_cast<Dependency1*>(vector1[0]);
-    if (inst1 == nullptr) {
-      inst1 = dynamic_cast<Dependency1*>(vector1[1]);
-    }
-    inst2 = dynamic_cast<Dependency2*>(vector1[1]);
-    if (inst2 == nullptr) {
-      inst2 = dynamic_cast<Dependency2*>(vector1[0]);
-    }
+    inst1 = getElementPtr<Dependency1>(vector1);
+    inst2 = getElementPtr<Dependency2>(vector1);
     BOOST_TEST(inst1 != nullptr);
     BOOST_TEST(inst2 != nullptr);
     inst1->str() = "instance1";
     inst2->str() = "instance2";
     auto vector2 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector2.size() == 2);
-    inst3 = dynamic_cast<Dependency1*>(vector2[0]);
-    inst4 = dynamic_cast<Dependency2*>(vector2[1]);
+    inst3 = getElementPtr<Dependency1>(vector2);
+    inst4 = getElementPtr<Dependency2>(vector2);
     BOOST_TEST(inst3 != nullptr);
     BOOST_TEST(inst4 != nullptr);
     inst3->str() = "instance3";
@@ -880,41 +882,34 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   delete inst2;
   delete inst3;
   delete inst4;
-
-  /*IDependency* instance1 = new Dependency1();
-  IDependency* instance2 = new Dependency2();
-  void* voidPtr = instance1;
-  auto instance11 = static_cast<IDependency*>(voidPtr);
-
-  auto inst1  = dynamic_cast<Dependency1*>(instance1);
-  auto inst2  = dynamic_cast<Dependency2*>(instance2);
-  auto inst11 = dynamic_cast<Dependency1*>(instance11);
-
-  BOOST_TEST(inst1 != nullptr);
-  BOOST_TEST(inst2 != nullptr);
-  BOOST_TEST(inst11 != nullptr);
-  delete instance1;
-  delete instance2;*/
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-/*BOOST_AUTO_TEST_CASE(VectorSharedPtrUnique)
+template <typename T>
+std::shared_ptr<T> getElementSPtr(std::vector<std::shared_ptr<IDependency>>& vector)
+{
+  std::shared_ptr<T> element = std::dynamic_pointer_cast<T>(vector[0]);
+  return element ? element : std::dynamic_pointer_cast<T>(vector[1]);
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(VectorSharedPtrUnique)
 {
   di::Container container;
   container.addMulti<IDependency, Dependency1>();
   container.addMulti<IDependency, Dependency2>();
   auto vector1 = container.create<std::vector<std::shared_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
-  auto inst1 = std::dynamic_pointer_cast<Dependency1>(vector1[0]);
-  auto inst2 = std::dynamic_pointer_cast<Dependency2>(vector1[1]);
+  auto inst1 = getElementSPtr<Dependency1>(vector1);
+  auto inst2 = getElementSPtr<Dependency2>(vector1);
   BOOST_TEST(inst1 != nullptr);
   BOOST_TEST(inst2 != nullptr);
   inst1->str() = "instance1";
   inst2->str() = "instance2";
   auto vector2 = container.create<std::vector<std::shared_ptr<IDependency>>>();
   BOOST_TEST(vector2.size() == 2);
-  auto inst3 = std::dynamic_pointer_cast<Dependency1>(vector2[0]);
-  auto inst4 = std::dynamic_pointer_cast<Dependency2>(vector2[1]);
+  auto inst3 = getElementSPtr<Dependency1>(vector2);
+  auto inst4 = getElementSPtr<Dependency2>(vector2);
   BOOST_TEST(inst3 != nullptr);
   BOOST_TEST(inst4 != nullptr);
   inst3->str() = "instance3";
@@ -923,26 +918,34 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   BOOST_TEST(inst2->str() == "instance2");
   BOOST_TEST(inst3->str() == "instance3");
   BOOST_TEST(inst4->str() == "instance4");
-}*/
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-/*BOOST_AUTO_TEST_CASE(VectorUniquePtrUnique)
+template <typename T>
+T* getElementUPtr(std::vector<std::unique_ptr<IDependency>>& vector)
+{
+  T* element = dynamic_cast<T*>(vector[0].get());
+  return element ? element : dynamic_cast<T*>(vector[1].get());
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(VectorUniquePtrUnique)
 {
   di::Container container;
   container.addMulti<IDependency, Dependency1>();
   container.addMulti<IDependency, Dependency2>();
   auto vector1 = container.create<std::vector<std::unique_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
-  auto inst1 = dynamic_cast<Dependency1*>(vector1[0].get());
-  auto inst2 = dynamic_cast<Dependency2*>(vector1[1].get());
+  auto inst1 = getElementUPtr<Dependency1>(vector1);
+  auto inst2 = getElementUPtr<Dependency2>(vector1);
   BOOST_TEST(inst1 != nullptr);
   BOOST_TEST(inst2 != nullptr);
   inst1->str() = "instance1";
   inst2->str() = "instance2";
   auto vector2 = container.create<std::vector<std::unique_ptr<IDependency>>>();
   BOOST_TEST(vector2.size() == 2);
-  auto inst3 = dynamic_cast<Dependency1*>(vector2[0].get());
-  auto inst4 = dynamic_cast<Dependency2*>(vector2[1].get());
+  auto inst3 = getElementUPtr<Dependency1>(vector2);
+  auto inst4 = getElementUPtr<Dependency2>(vector2);
   BOOST_TEST(inst3 != nullptr);
   BOOST_TEST(inst4 != nullptr);
   BOOST_TEST(inst3 != inst1);
@@ -953,10 +956,10 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   BOOST_TEST(inst2->str() == "instance2");
   BOOST_TEST(inst3->str() == "instance3");
   BOOST_TEST(inst4->str() == "instance4");
-}*/
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-/*BOOST_AUTO_TEST_CASE(VectorPurePtrSingle)
+BOOST_AUTO_TEST_CASE(VectorPurePtrSingle)
 {
   Dependency1* inst1 = nullptr;
   Dependency2* inst2 = nullptr;
@@ -968,16 +971,16 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
     container.addMulti<IDependency, Dependency2, di::SinglePolicy>();
     auto vector1 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector1.size() == 2);
-    inst1 = dynamic_cast<Dependency1*>(vector1[0]);
-    inst2 = dynamic_cast<Dependency2*>(vector1[1]);
+    inst1 = getElementPtr<Dependency1>(vector1);
+    inst2 = getElementPtr<Dependency2>(vector1);
     BOOST_TEST(inst1 != nullptr);
     BOOST_TEST(inst2 != nullptr);
     inst1->str() = "instance1";
     inst2->str() = "instance2";
     auto vector2 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector2.size() == 2);
-    inst3 = dynamic_cast<Dependency1*>(vector2[0]);
-    inst4 = dynamic_cast<Dependency2*>(vector2[1]);
+    inst3 = getElementPtr<Dependency1>(vector2);
+    inst4 = getElementPtr<Dependency2>(vector2);
     BOOST_TEST(inst3 == inst1);
     BOOST_TEST(inst4 == inst2);
     inst3->str() = "instance3";
@@ -987,26 +990,26 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
     BOOST_TEST(inst3->str() == "instance3");
     BOOST_TEST(inst4->str() == "instance4");
   }
-}*/
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-/*BOOST_AUTO_TEST_CASE(VectorSharedPtrSingle)
+BOOST_AUTO_TEST_CASE(VectorSharedPtrSingle)
 {
   di::Container container;
   container.addMulti<IDependency, Dependency1, di::SinglePolicy>();
   container.addMulti<IDependency, Dependency2, di::SinglePolicy>();
   auto vector1 = container.create<std::vector<std::shared_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
-  auto inst1 = std::dynamic_pointer_cast<Dependency1>(vector1[0]);
-  auto inst2 = std::dynamic_pointer_cast<Dependency2>(vector1[1]);
+  auto inst1 = getElementSPtr<Dependency1>(vector1);
+  auto inst2 = getElementSPtr<Dependency2>(vector1);
   BOOST_TEST(inst1 != nullptr);
   BOOST_TEST(inst2 != nullptr);
   inst1->str() = "instance1";
   inst2->str() = "instance2";
   auto vector2 = container.create<std::vector<std::shared_ptr<IDependency>>>();
   BOOST_TEST(vector2.size() == 2);
-  auto inst3 = std::dynamic_pointer_cast<Dependency1>(vector2[0]);
-  auto inst4 = std::dynamic_pointer_cast<Dependency2>(vector2[1]);
+  auto inst3 = getElementSPtr<Dependency1>(vector2);
+  auto inst4 = getElementSPtr<Dependency2>(vector2);
   BOOST_TEST(inst3 != nullptr);
   BOOST_TEST(inst4 != nullptr);
   inst3->str() = "instance3";
@@ -1015,26 +1018,26 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   BOOST_TEST(inst2->str() == "instance4");
   BOOST_TEST(inst3->str() == "instance3");
   BOOST_TEST(inst4->str() == "instance4");
-}*/
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-/*BOOST_AUTO_TEST_CASE(VectorUniquePtrSingle)
+BOOST_AUTO_TEST_CASE(VectorUniquePtrSingle)
 {
   di::Container container;
   container.addMulti<IDependency, Dependency1, di::SinglePolicy>();
   container.addMulti<IDependency, Dependency2, di::SinglePolicy>();
   auto vector1 = container.create<std::vector<std::unique_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
-  auto inst1 = dynamic_cast<Dependency1*>(vector1[0].get());
-  auto inst2 = dynamic_cast<Dependency2*>(vector1[1].get());
+  auto inst1 = getElementUPtr<Dependency1>(vector1);
+  auto inst2 = getElementUPtr<Dependency2>(vector1);
   BOOST_TEST(inst1 != nullptr);
   BOOST_TEST(inst2 != nullptr);
   inst1->str() = "instance1";
   inst2->str() = "instance2";
   auto vector2 = container.create<std::vector<std::unique_ptr<IDependency>>>();
   BOOST_TEST(vector2.size() == 2);
-  auto inst3 = dynamic_cast<Dependency1*>(vector2[0].get());
-  auto inst4 = dynamic_cast<Dependency2*>(vector2[1].get());
+  auto inst3 = getElementUPtr<Dependency1>(vector2);
+  auto inst4 = getElementUPtr<Dependency2>(vector2);
   BOOST_TEST(inst3 != nullptr);
   BOOST_TEST(inst4 != nullptr);
   inst3->str() = "instance3";
@@ -1043,7 +1046,7 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrUnique)
   BOOST_TEST(inst2->str() == "instance2");
   BOOST_TEST(inst3->str() == "instance3");
   BOOST_TEST(inst4->str() == "instance4");
-}*/
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(VectorDependency)
