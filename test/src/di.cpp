@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(RefUnique)
     di::Container container;
     {      
       container.add<Dependency1, di::UniquePolicy>();
-      const Dependency1& inst = container.create<const Dependency1&>();
+      container.create<const Dependency1&>();
       BOOST_TEST(false);
     }
   }

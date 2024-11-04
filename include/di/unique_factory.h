@@ -22,7 +22,7 @@ protected:
   
   void* createUnique(Container* container, Args* args) override;
   
-  void* createReference(Container* container,Args* args) override;
+  void* createReference(Container* container, Args* args) override;
   
   bool allowInstanceCreation() override { return true; }
 };
@@ -52,7 +52,7 @@ void* UniqueFactory<I, T>::createUnique(Container* container, Args* args)
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
-void* UniqueFactory<I, T>::createReference(Container* container, Args* args)
+void* UniqueFactory<I, T>::createReference(Container*, Args*)
 {
   throw std::runtime_error(std::string("Creating a reference to ") + typeid(T).name() + " is not allowed under the Unique policy");
 }

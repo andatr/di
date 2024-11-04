@@ -107,7 +107,7 @@ T Container::createImpl(Args* args)
     return std::forward<T>(args->get<T>(it));
   }
   if (auto factory = findFactory<T>(false)) {
-    return factory->createObject<std::remove_cv_t<T>>(this, args);
+    return factory->template createObject<std::remove_cv_t<T>>(this, args);
   }
   return createSpecial<T>(args);
 }
@@ -118,12 +118,12 @@ std::enable_if_t<is_pointer<T>, T> Container::createSpecial(Args* args)
 {
   using E = typename pointer_traits<T>::element_type;
   auto factory = findFactory<E>();
-  return factory->createObject<std::remove_cv_t<T>>(this, args);
+  return factory->template createObject<std::remove_cv_t<T>>(this, args);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_function_v<T>, T> Container::createSpecial(Args* args)
+std::enable_if_t<is_function_v<T>, T> Container::createSpecial(Args*)
 {
   return LambdaHelper<std::remove_cvref_t<T>>::createLambda(this);
 }
