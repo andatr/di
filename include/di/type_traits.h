@@ -1,5 +1,5 @@
-#ifndef YAGA_DI_TRAITS
-#define YAGA_DI_TRAITS
+#ifndef YAGA_DI_TYPE_TRAITS
+#define YAGA_DI_TYPE_TRAITS
 
 #include <functional>
 #include <memory>
@@ -9,6 +9,10 @@
 
 namespace yaga {
 namespace di {
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+constexpr bool is_reference = std::is_reference_v<T>;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -47,7 +51,7 @@ struct vector_traits<std::vector<T>> : std::true_type
 };
 
 template <typename T>
-constexpr bool is_vector = vector_traits<std::decay_t<T>>::value;
+constexpr bool is_vector = vector_traits<std::remove_cv_t<T>>::value;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
@@ -64,20 +68,18 @@ struct pointer_traits<T&>
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
+constexpr bool is_pure_ptr = std::is_pointer_v<T>;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
 constexpr bool is_pointer =
-  std::is_pointer_v<T> ||
+  di::is_pure_ptr<T> ||
   di::is_unique_ptr<T> ||
   di::is_shared_ptr<T>;
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-constexpr bool is_pointer_or_ref =
-  is_pointer<T> ||
-  std::is_reference_v<T>;
-
-// -----------------------------------------------------------------------------------------------------------------------------
 template <typename T, typename U>
-constexpr bool is_same = std::is_same_v<std::decay_t<T>, std::decay_t<U>>;
+constexpr bool is_same = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template<typename T>
@@ -92,4 +94,4 @@ inline constexpr bool is_function_v = is_function<T>::value;
 } // !namespace di
 } // !namespace yaga
 
-#endif // !YAGA_DI_TRAITS
+#endif // !YAGA_DI_TYPE_TRAITS

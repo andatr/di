@@ -14,10 +14,10 @@ class ObjectFactory
 {
 public:
   template <typename T>
-  static T create(Container* container, Args* args, bool init);
+  static T create(Container* container, Args* args, bool callInit);
 
   template <typename T>
-  static T* createPtr(Container* container, Args* args, bool init);
+  static T* createPtr(Container* container, Args* args, bool callInit);
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -88,11 +88,11 @@ struct ObjectFactoryPtrHelper;
 template <typename T, int... N>
 struct ObjectFactoryPtrHelper<T, std::integer_sequence<int, N...>>
 {
-  static T* createPtr(Container* container, Args* args, bool init) { 
+  static T* createPtr(Container* container, Args* args, bool callInit) { 
     (void)container;
     (void)args;
     T* ptr = new T(CtorArg<T, N>{ container, args }...);
-    if (init) initPtr(ptr, 0);
+    if (callInit) initPtr(ptr, 0);
     return ptr;
   }
 };
@@ -104,29 +104,29 @@ struct ObjectFactoryHelper;
 template <typename T, int... N>
 struct ObjectFactoryHelper<T, std::integer_sequence<int, N...>>
 {
-  static T create(Container* container, Args* args, bool init) { 
+  static T create(Container* container, Args* args, bool callInit) { 
     (void)container;
     (void)args;
     T obj(CtorArg<T, N>{ container, args }...);
-    if (init) initCopy(obj, 0);
+    if (callInit) initCopy(obj, 0);
     return obj;
   }
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-T ObjectFactory::create(Container* container, Args* args, bool init)
+T ObjectFactory::create(Container* container, Args* args, bool callInit)
 {
   using H = ObjectFactoryHelper<T, std::make_integer_sequence<int, countCtorArgs<T>(0)>>;
-  return H::create(container, args, init);
+  return H::create(container, args, callInit);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-T* ObjectFactory::createPtr(Container* container, Args* args, bool init)
+T* ObjectFactory::createPtr(Container* container, Args* args, bool callInit)
 {
   using H = ObjectFactoryPtrHelper<T, std::make_integer_sequence<int, countCtorArgs<T>(0)>>;
-  return H::createPtr(container, args, init);
+  return H::createPtr(container, args, callInit);
 }
 
 } // !namespace di

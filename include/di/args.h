@@ -5,6 +5,8 @@
 #include <typeinfo>
 #include <typeindex>
 
+#include "di/type_traits.h"
+
 namespace yaga {
 namespace di {
 
@@ -57,20 +59,16 @@ ArgsIter::operator bool() const
 template <typename... Params>
 Args::Args(Params&&...params)
 {
-  (..., (args_[typeid(std::decay_t<Params>)] = static_cast<void*>(std::addressof(params))));
+  (..., (args_[typeid(std::remove_cvref_t<Params>)] = static_cast<void*>(std::addressof(params))));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
 ArgsIter Args::find()
 {
-  auto it = args_.find(typeid(T));
-  if (it == args_.end()) {
-    it = args_.find(typeid(std::decay_t<T>));
-  }
   ArgsIter iter;
   iter.args_ = this;
-  iter.iter_ = it;
+  iter.iter_ = args_.find(typeid(std::remove_cvref_t<T>));
   return iter;
 }
 
@@ -78,7 +76,7 @@ ArgsIter Args::find()
 template <typename T>
 T& Args::get(ArgsIter iter)
 {
-  return (T&)(*reinterpret_cast<std::decay_t<T>*>(iter.iter_->second));
+  return (T&)(*reinterpret_cast<std::remove_cvref_t<T>*>(iter.iter_->second));
 }
 
 } // !namespace di
