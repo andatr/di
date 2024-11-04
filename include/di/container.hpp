@@ -147,7 +147,7 @@ std::enable_if_t<is_pointer<T>, Container&> Container::createSpecialMulti(Vector
   using Element = std::remove_cvref_t<typename std::pointer_traits<T>::element_type>;
   auto range = multiFactories_.equal_range(typeid(Element));
   for (decltype(range.first) it = range.first; it != range.second; ++it) {
-    vector.push_back(it->second->createObject<T>(this, args));
+    vector.push_back(it->second->template createObject<T>(this, args));
   }
   return *this;
 }
@@ -159,7 +159,7 @@ std::enable_if_t<!is_pointer<T>, Container&> Container::createSpecialMulti(Vecto
   using Element = std::remove_cvref_t<T>;
   auto range = multiFactories_.equal_range(typeid(Element));
   for (decltype(range.first) it = range.first; it != range.second; ++it) {
-    vector.push_back(it->second->createObject<T>(this, args));
+    vector.push_back(it->second->template createObject<T>(this, args));
   }
   return *this;
 }
