@@ -32,10 +32,10 @@ public:
    * @tparam T The class type being registered, which must be derived from `I`.
    * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
    *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
-   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to true.
+   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = true>
+  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = false>
   std::enable_if_t<di::is_base_of<I, T, P>, Container&> add();
 
   /*
@@ -44,10 +44,10 @@ public:
    * @tparam T The class type being registered.
    * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
    *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
-   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to true.
+   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename T, typename P = UniquePolicy, bool CallInit = true>
+  template <typename T, typename P = UniquePolicy, bool CallInit = false>
   std::enable_if_t<di::is_base_of<T, T, P>, Container&> add();
 
   /*
@@ -85,10 +85,10 @@ public:
    * @tparam T The class type being registered, which must be derived from `I`.
    * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
    *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
-   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to true.
+   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = true>
+  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = false>
   std::enable_if_t<di::is_base_of<I, T, P>, Container&> addMulti();
 
   /*
@@ -100,10 +100,10 @@ public:
    * @tparam T The class type being registered.
    * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
    *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
-   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to true.
+   * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename T, typename P = UniquePolicy, bool CallInit = true>
+  template <typename T, typename P = UniquePolicy, bool CallInit = false>
   std::enable_if_t<di::is_base_of<T, T, P>, Container&> addMulti();
 
   /*

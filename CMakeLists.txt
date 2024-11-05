@@ -8,6 +8,7 @@ project(di VERSION 0.0.1 LANGUAGES CXX)
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 
+option(DI_EXAMPLES "Enable examples (default ON)" ON)
 option(DI_TEST "Enable tests (default ON)" ON)
 
 set (CMAKE_CXX_STANDARD 20)
@@ -55,6 +56,10 @@ install(
   FILES "${CMAKE_CURRENT_BINARY_DIR}/diConfigVersion.cmake"
   DESTINATION "share/cmake/di"
 )
+
+if (DI_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 if (DI_TEST)
   add_subdirectory(test)

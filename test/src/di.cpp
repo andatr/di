@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(ConstUniquePtrChain)
 BOOST_AUTO_TEST_CASE(InitMethodPtrUnique)
 {
   di::Container container;
-  container.add<InitDependency, di::UniquePolicy>();
+  container.add<InitDependency, di::UniquePolicy, true>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 1);
   auto d2 = container.createShared<InitDependency>();
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodPtrUnique)
 BOOST_AUTO_TEST_CASE(InitMethodPtrShared)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy>();
+  container.add<InitDependency, di::SharedPolicy, true>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 1);
   auto d2 = container.createShared<InitDependency>();
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodPtrShared)
 BOOST_AUTO_TEST_CASE(InitMethodCopy)
 {
   di::Container container;
-  container.add<InitDependency>();
+  container.add<InitDependency, di::UniquePolicy, true>();
   InitDependency d1 = container.create<InitDependency>();
   BOOST_TEST(d1.counter() == 1);
   InitDependency d2 = container.create<InitDependency>();
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodCopy)
 BOOST_AUTO_TEST_CASE(InitMethodRef)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy>();
+  container.add<InitDependency, di::SharedPolicy, true>();
   const InitDependency& d1 = container.create<const InitDependency&>();
   BOOST_TEST(d1.counter() == 1);
   const InitDependency& d2 = container.create<const InitDependency&>();
