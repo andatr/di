@@ -59,7 +59,7 @@ ArgsIter::operator bool() const
 template <typename... Params>
 Args::Args(Params&&...params)
 {
-  (..., (args_[typeid(std::remove_cvref_t<Params>)] = static_cast<void*>(std::addressof(params))));
+  (..., (args_[typeid(RemoveCVRef<Params>)] = static_cast<void*>(std::addressof(params))));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -68,7 +68,7 @@ ArgsIter Args::find()
 {
   ArgsIter iter;
   iter.args_ = this;
-  iter.iter_ = args_.find(typeid(std::remove_cvref_t<T>));
+  iter.iter_ = args_.find(typeid(RemoveCVRef<T>));
   return iter;
 }
 
@@ -76,7 +76,7 @@ ArgsIter Args::find()
 template <typename T>
 T& Args::get(ArgsIter iter)
 {
-  return (T&)(*reinterpret_cast<std::remove_cvref_t<T>*>(iter.iter_->second));
+  return (T&)(*reinterpret_cast<RemoveCVRef<T>*>(iter.iter_->second));
 }
 
 } // !namespace di

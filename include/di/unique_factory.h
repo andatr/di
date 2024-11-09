@@ -10,10 +10,10 @@ namespace yaga {
 namespace di {
 
 template <typename I, typename T>
-class UniqueFactory final : public Factory
+class UniqueFactory : public Factory
 {
 public:
-  explicit UniqueFactory(bool init) : Factory(init) {}
+  explicit UniqueFactory(bool callInit = false);
 
 protected:  
   void* createPure(Container* container, Args* args) override;
@@ -25,13 +25,29 @@ protected:
   void* createReference(Container* container, Args* args) override;
   
   bool allowInstanceCreation() override { return true; }
+
+  virtual T* createInstance(Container* container, Args* args);
 };
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T>
+UniqueFactory<I, T>::UniqueFactory(bool callInit) :
+  Factory(callInit)
+{
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T>
+T* UniqueFactory<I, T>::createInstance(Container* container, Args* args)
+{
+  return ObjectFactory::createPtr<T>(container, args, callInit_);
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 void* UniqueFactory<I, T>::createPure(Container* container, Args* args)
 {
-  I* ptr = ObjectFactory::createPtr<T>(container, args, callInit_);
+  I* ptr = createInstance(container, args);
   return ptr;
 }
 
@@ -39,7 +55,7 @@ void* UniqueFactory<I, T>::createPure(Container* container, Args* args)
 template <typename I, typename T>
 std::shared_ptr<void> UniqueFactory<I, T>::createShared(Container* container, Args* args)
 {
-  std::shared_ptr<I> ptr = std::shared_ptr<I>(ObjectFactory::createPtr<T>(container, args, callInit_));
+  std::shared_ptr<I> ptr = std::shared_ptr<I>(createInstance(container, args));
   return ptr;
 }
 
@@ -47,14 +63,15 @@ std::shared_ptr<void> UniqueFactory<I, T>::createShared(Container* container, Ar
 template <typename I, typename T>
 void* UniqueFactory<I, T>::createUnique(Container* container, Args* args)
 {
-  return createPure(container, args);
+  I* ptr = createInstance(container, args);
+  return ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 void* UniqueFactory<I, T>::createReference(Container*, Args*)
 {
-  throw std::runtime_error(std::string("Creating a reference to ") + typeid(T).name() + " is not allowed under the Unique policy");
+  throw std::runtime_error(std::string("Creating a reference to ") + typeid(T).name() + " is not allowed under the Unique Scope");
 }
 
 } // !namespace di

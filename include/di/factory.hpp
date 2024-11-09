@@ -8,50 +8,83 @@
 #include "di/factory_context.h"
 #include "di/object_factory.h"
 #include "di/shared_factory.h"
+#include "di/shared_functor_factory.h"
 #include "di/shared_impl_factory.h"
+#include "di/shared_impl_functor_factory.h"
 #include "di/unique_factory.h"
+#include "di/unique_functor_factory.h"
 
 namespace yaga {
 namespace di {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename P, typename I, typename T>
-std::enable_if_t<std::is_same_v<P, UniquePolicy>, FactorySPtr> createFactory(bool callInit, FactoryContext*)
+template <typename S, typename I, typename T>
+EnableIf<IsSame<S, UniqueScope>, FactorySPtr> createFactory(bool callInit, FactoryContext*)
 {
   return std::make_shared<UniqueFactory<I, T>>(callInit);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename P, typename I, typename T>
-std::enable_if_t<std::is_same_v<P, SharedPolicy>, FactorySPtr> createFactory(bool callInit, FactoryContext*)
+template <typename S, typename I, typename T>
+EnableIf<IsSame<S, SharedScope>, FactorySPtr> createFactory(bool callInit, FactoryContext*)
 {
   return std::make_shared<SharedFactory<I, T>>(callInit);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename P, typename I, typename T>
-std::enable_if_t<std::is_same_v<P, SharedImlpPolicy>, FactorySPtr> createFactory(bool callInit, FactoryContext* context)
+template <typename S, typename I, typename T>
+EnableIf<IsSame<S, SharedImlpScope>, FactorySPtr> createFactory(bool callInit, FactoryContext* context)
 {
-  return std::make_shared<SharedImlpFactory<I, T>>(callInit, context);
+  return std::make_shared<SharedImlpFactory<I, T>>(context, callInit);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename P, typename I, typename T>
-FactorySPtr createFactory(std::shared_ptr<T> instance, FactoryContext*)
+template <typename S, typename I, typename T>
+EnableIf<IsSame<S, SharedScope>, FactorySPtr> createFactory(std::shared_ptr<T> instance, FactoryContext*)
 {
   return std::make_shared<SharedFactory<I, T>>(false, instance);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
+template <typename S, typename I, typename T>
+EnableIf<IsSame<S, SharedImlpScope>, FactorySPtr> createFactory(
+  std::shared_ptr<T> instance,
+  FactoryContext* context)
+{
+  return std::make_shared<SharedImlpFactory<I, T>>(context, false, instance);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename S, typename I, typename T, typename F>
+EnableIf<IsSame<S, UniqueScope>, FactorySPtr> createFunctorFactory(F functor, FactoryContext*)
+{
+  return std::make_shared<UniqueFunctorFactory<I, T, F>>(functor);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename S, typename I, typename T, typename F>
+EnableIf<IsSame<S, SharedScope>, FactorySPtr> createFunctorFactory(F functor, FactoryContext*)
+{
+  return std::make_shared<SharedFunctorFactory<I, T, F>>(functor);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename S, typename I, typename T, typename F>
+EnableIf<IsSame<S, SharedImlpScope>, FactorySPtr> createFunctorFactory(F functor, FactoryContext* context)
+{
+  return std::make_shared<SharedImlpFunctorFactory<I, T, F>>(context, functor);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_pure_ptr<T>, T> Factory::createObject(Container* container, Args* args)
+EnableIf<IsPurePtr<T>, T> Factory::createObject(Container* container, Args* args)
 {
   return static_cast<T>(createPure(container, args));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_shared_ptr<T>, T> Factory::createObject(Container* container, Args* args)
+EnableIf<IsSharedPtr<T>, T> Factory::createObject(Container* container, Args* args)
 {
   using E = typename std::pointer_traits<T>::element_type;
   return std::static_pointer_cast<E>(createShared(container, args));
@@ -59,7 +92,7 @@ std::enable_if_t<is_shared_ptr<T>, T> Factory::createObject(Container* container
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_unique_ptr<T>, T> Factory::createObject(Container* container, Args* args)
+EnableIf<IsIniquePtr<T>, T> Factory::createObject(Container* container, Args* args)
 {
   using E = typename std::pointer_traits<T>::element_type;
   return std::unique_ptr<E>(static_cast<E*>(createUnique(container, args)));
@@ -67,23 +100,23 @@ std::enable_if_t<is_unique_ptr<T>, T> Factory::createObject(Container* container
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<std::is_reference_v<T>, std::remove_cvref_t<T>&> Factory::createObject(Container* container, Args* args)
+EnableIf<IsReference<T>, RemoveCVRef<T>&> Factory::createObject(Container* container, Args* args)
 {
-  auto ptr = static_cast<std::remove_cvref_t<T>*>(createReference(container, args));
+  auto ptr = static_cast<RemoveCVRef<T>*>(createReference(container, args));
   return *ptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<
-  !is_pointer<T> &&
-  !std::is_reference_v<T>
+EnableIf<
+  !IsPointer<T> &&
+  !IsReference<T>
 , T> Factory::createObject(Container* container, Args* args)
 {
   if (allowInstanceCreation()) {
     return ObjectFactory::create<T>(container, args, callInit_);
   }
-  throw std::runtime_error(std::string("Class ") + typeid(T).name() + " instantiation is not allowed by policy");
+  throw std::runtime_error(std::string("Class ") + typeid(T).name() + " instantiation is not allowed by scope");
 }
 
 } // !namespace di

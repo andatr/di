@@ -312,7 +312,7 @@ BOOST_AUTO_TEST_CASE(PurePtrShared)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::SharedPolicy>();
+    container.add<IDependency, Dependency1, di::SharedScope>();
     auto inst1 = container.create<IDependency*>();
     BOOST_TEST(inst1 != nullptr);
     inst1->str() = "instance1";
@@ -333,7 +333,7 @@ BOOST_AUTO_TEST_CASE(PurePtrUnique)
   IDependency* inst2 = nullptr;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     inst1 = container.createPtr<IDependency>();
     BOOST_TEST(inst1 != nullptr);
     inst1->str() = "instance1";
@@ -356,7 +356,7 @@ BOOST_AUTO_TEST_CASE(SharedPtrShared)
   {
     di::Container container;
     {
-      container.add<IDependency, Dependency1, di::SharedPolicy>();
+      container.add<IDependency, Dependency1, di::SharedScope>();
       auto inst1 = container.createShared<IDependency>();
       BOOST_TEST(inst1 != nullptr);
       inst1->str() = "instance1";
@@ -380,7 +380,7 @@ BOOST_AUTO_TEST_CASE(SharedPtrUnique)
   std::shared_ptr<IDependency> inst2;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     inst1 = container.createShared<IDependency>();
     BOOST_TEST(inst1 != nullptr);
     inst1->str() = "instance1";
@@ -402,7 +402,7 @@ BOOST_AUTO_TEST_CASE(UniquePtrShared)
   std::unique_ptr<IDependency> inst2;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::SharedPolicy>();
+    container.add<IDependency, Dependency1, di::SharedScope>();
     inst1 = container.createUnique<IDependency>();
     BOOST_TEST(inst1 != nullptr);
     inst1->str() = "instance1";
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(UniquePtrUnique)
   std::unique_ptr<IDependency> inst2;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     inst1 = container.createUnique<IDependency>();
     BOOST_TEST(inst1 != nullptr);
     inst1->str() = "instance1";
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE(RefShared)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<Dependency1, di::SharedPolicy>();
+    container.add<Dependency1, di::SharedScope>();
     const Dependency1& inst1 = container.create<const Dependency1&>();
     const Dependency1& inst2 = container.create<const Dependency1&>();
     BOOST_TEST(&inst1 == &inst2);
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(RefUnique)
   {
     di::Container container;
     {      
-      container.add<Dependency1, di::UniquePolicy>();
+      container.add<Dependency1, di::UniqueScope>();
       container.create<const Dependency1&>();
       BOOST_TEST(false);
     }
@@ -478,7 +478,7 @@ BOOST_AUTO_TEST_CASE(CopyShared)
   try
   {
     di::Container container;
-    container.add<Dependency1, di::SharedPolicy>();
+    container.add<Dependency1, di::SharedScope>();
     Dependency1 inst = container.create<Dependency1>();
     BOOST_TEST(false);
   }
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(CopyShared)
 BOOST_AUTO_TEST_CASE(CopyUnique)
 {
   di::Container container;
-  container.add<Dependency1, di::UniquePolicy>();
+  container.add<Dependency1, di::UniqueScope>();
   Dependency1 inst1 = container.create<Dependency1>();
   Dependency1 inst2 = container.create<Dependency1>();
   inst1.str() = "instance1";
@@ -509,7 +509,7 @@ BOOST_AUTO_TEST_CASE(PurePtrSharedChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::SharedPolicy>();
+    container.add<IDependency, Dependency1, di::SharedScope>();
     container.add<PurePtrDependant>();
     inst1 = container.createPtr<PurePtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -534,7 +534,7 @@ BOOST_AUTO_TEST_CASE(PurePtrUniqueChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     container.add<PurePtrDependant>();
     inst1 = container.createPtr<PurePtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(SharedPtrSharedChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::SharedPolicy>();
+    container.add<IDependency, Dependency1, di::SharedScope>();
     container.add<SharedPtrDependant>();
     inst1 = container.createPtr<SharedPtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -586,7 +586,7 @@ BOOST_AUTO_TEST_CASE(SharedPtrUniqueChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     container.add<SharedPtrDependant>();
     inst1 = container.createPtr<SharedPtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -611,7 +611,7 @@ BOOST_AUTO_TEST_CASE(UniquePtrSharedChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::SharedPolicy>();
+    container.add<IDependency, Dependency1, di::SharedScope>();
     container.add<UniquePtrDependant>();
     inst1 = container.createPtr<UniquePtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -636,7 +636,7 @@ BOOST_AUTO_TEST_CASE(UniquePtrUniqueChain)
   Dependency1::dtorCalls = 0;
   {
     di::Container container;
-    container.add<IDependency, Dependency1, di::UniquePolicy>();
+    container.add<IDependency, Dependency1, di::UniqueScope>();
     container.add<UniquePtrDependant>();
     inst1 = container.createPtr<UniquePtrDependant>();
     BOOST_TEST(inst1->dependency() != nullptr);
@@ -657,7 +657,7 @@ BOOST_AUTO_TEST_CASE(UniquePtrUniqueChain)
 BOOST_AUTO_TEST_CASE(CopyUniqueChain)
 {
   di::Container container;
-  container.add<Dependency1, di::UniquePolicy>();
+  container.add<Dependency1, di::UniqueScope>();
   container.add<CopyDependant>();
   auto inst1 = container.createShared<CopyDependant>();
   inst1->str() = "instance1";
@@ -673,7 +673,7 @@ BOOST_AUTO_TEST_CASE(CopySharedChain)
   try
   {
     di::Container container;
-    container.add<Dependency1, di::SharedPolicy>();
+    container.add<Dependency1, di::SharedScope>();
     container.add<CopyDependant>();
     auto inst = container.createShared<CopyDependant>();
     BOOST_TEST(false);
@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(ConstUniquePtrChain)
 BOOST_AUTO_TEST_CASE(InitMethodPtrUnique)
 {
   di::Container container;
-  container.add<InitDependency, di::UniquePolicy, true>();
+  container.add<InitDependency, di::UniqueScope, true>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 1);
   auto d2 = container.createShared<InitDependency>();
@@ -757,7 +757,7 @@ BOOST_AUTO_TEST_CASE(InitMethodPtrUnique)
 BOOST_AUTO_TEST_CASE(DisableInitMethodPtrUnique)
 {
   di::Container container;
-  container.add<InitDependency, di::UniquePolicy, false>();
+  container.add<InitDependency, di::UniqueScope, false>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 0);
   auto d2 = container.createShared<InitDependency>();
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodPtrUnique)
 BOOST_AUTO_TEST_CASE(InitMethodPtrShared)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy, true>();
+  container.add<InitDependency, di::SharedScope, true>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 1);
   auto d2 = container.createShared<InitDependency>();
@@ -781,7 +781,7 @@ BOOST_AUTO_TEST_CASE(InitMethodPtrShared)
 BOOST_AUTO_TEST_CASE(DisableInitMethodPtrShared)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy, false>();
+  container.add<InitDependency, di::SharedScope, false>();
   auto d1 = container.createShared<InitDependency>();
   BOOST_TEST(d1->counter() == 0);
   auto d2 = container.createShared<InitDependency>();
@@ -793,7 +793,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodPtrShared)
 BOOST_AUTO_TEST_CASE(InitMethodCopy)
 {
   di::Container container;
-  container.add<InitDependency, di::UniquePolicy, true>();
+  container.add<InitDependency, di::UniqueScope, true>();
   InitDependency d1 = container.create<InitDependency>();
   BOOST_TEST(d1.counter() == 1);
   InitDependency d2 = container.create<InitDependency>();
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(InitMethodCopy)
 BOOST_AUTO_TEST_CASE(DisableInitMethodCopy)
 {
   di::Container container;
-  container.add<InitDependency, di::UniquePolicy, false>();
+  container.add<InitDependency, di::UniqueScope, false>();
   InitDependency d1 = container.create<InitDependency>();
   BOOST_TEST(d1.counter() == 0);
   InitDependency d2 = container.create<InitDependency>();
@@ -815,7 +815,7 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodCopy)
 BOOST_AUTO_TEST_CASE(InitMethodRef)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy, true>();
+  container.add<InitDependency, di::SharedScope, true>();
   const InitDependency& d1 = container.create<const InitDependency&>();
   BOOST_TEST(d1.counter() == 1);
   const InitDependency& d2 = container.create<const InitDependency&>();
@@ -827,7 +827,7 @@ BOOST_AUTO_TEST_CASE(InitMethodRef)
 BOOST_AUTO_TEST_CASE(DisableInitMethodRef)
 {
   di::Container container;
-  container.add<InitDependency, di::SharedPolicy, false>();
+  container.add<InitDependency, di::SharedScope, false>();
   const InitDependency& d1 = container.create<const InitDependency&>();
   BOOST_TEST(d1.counter() == 0);
   const InitDependency& d2 = container.create<const InitDependency&>();
@@ -839,8 +839,8 @@ BOOST_AUTO_TEST_CASE(DisableInitMethodRef)
 BOOST_AUTO_TEST_CASE(DoubleDependencySharedImpl)
 {
   di::Container container;
-  container.add<IDependency,  DoubleDependency, di::SharedImlpPolicy>();
-  container.add<IDependency2, DoubleDependency, di::SharedImlpPolicy>();
+  container.add<IDependency,  DoubleDependency, di::SharedImlpScope>();
+  container.add<IDependency2, DoubleDependency, di::SharedImlpScope>();
   auto d1 = container.createShared<IDependency>();
   auto d2 = container.createShared<IDependency2>();
   auto dd1 = std::dynamic_pointer_cast<DoubleDependency>(d1);
@@ -979,8 +979,8 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrShared)
   Dependency2* inst4 = nullptr;
   {
     di::Container container;
-    container.addMulti<IDependency, Dependency1, di::SharedPolicy>();
-    container.addMulti<IDependency, Dependency2, di::SharedPolicy>();
+    container.addMulti<IDependency, Dependency1, di::SharedScope>();
+    container.addMulti<IDependency, Dependency2, di::SharedScope>();
     auto vector1 = container.create<std::vector<IDependency*>>();
     BOOST_TEST(vector1.size() == 2);
     inst1 = getElementPtr<Dependency1>(vector1);
@@ -1008,8 +1008,8 @@ BOOST_AUTO_TEST_CASE(VectorPurePtrShared)
 BOOST_AUTO_TEST_CASE(VectorSharedPtrShared)
 {
   di::Container container;
-  container.addMulti<IDependency, Dependency1, di::SharedPolicy>();
-  container.addMulti<IDependency, Dependency2, di::SharedPolicy>();
+  container.addMulti<IDependency, Dependency1, di::SharedScope>();
+  container.addMulti<IDependency, Dependency2, di::SharedScope>();
   auto vector1 = container.create<std::vector<std::shared_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
   auto inst1 = getElementSPtr<Dependency1>(vector1);
@@ -1036,8 +1036,8 @@ BOOST_AUTO_TEST_CASE(VectorSharedPtrShared)
 BOOST_AUTO_TEST_CASE(VectorUniquePtrShared)
 {
   di::Container container;
-  container.addMulti<IDependency, Dependency1, di::SharedPolicy>();
-  container.addMulti<IDependency, Dependency2, di::SharedPolicy>();
+  container.addMulti<IDependency, Dependency1, di::SharedScope>();
+  container.addMulti<IDependency, Dependency2, di::SharedScope>();
   auto vector1 = container.create<std::vector<std::unique_ptr<IDependency>>>();
   BOOST_TEST(vector1.size() == 2);
   auto inst1 = getElementUPtr<Dependency1>(vector1);
@@ -1064,10 +1064,10 @@ BOOST_AUTO_TEST_CASE(VectorUniquePtrShared)
 BOOST_AUTO_TEST_CASE(VectorDependency)
 {
   di::Container container;
-  container.addMulti<IDependency, Dependency1, di::SharedPolicy>();
-  container.addMulti<IDependency, Dependency2, di::SharedPolicy>();
-  container.add<IDependency, Dependency3, di::SharedPolicy>();
-  container.add<VectorDependant, di::UniquePolicy>();
+  container.addMulti<IDependency, Dependency1, di::SharedScope>();
+  container.addMulti<IDependency, Dependency2, di::SharedScope>();
+  container.add<IDependency, Dependency3, di::SharedScope>();
+  container.add<VectorDependant, di::UniqueScope>();
   auto vector = container.create<std::vector<std::shared_ptr<IDependency>>>();
   vector[0]->str() = "instance1";
   vector[1]->str() = "instance2";
@@ -1083,9 +1083,9 @@ BOOST_AUTO_TEST_CASE(VectorDependency)
 BOOST_AUTO_TEST_CASE(VectorRefDependency)
 {
   di::Container container;
-  container.addMulti<IDependency, Dependency1, di::SharedPolicy>();
-  container.addMulti<IDependency, Dependency2, di::SharedPolicy>();
-  container.add<IDependency, Dependency3, di::SharedPolicy>();
+  container.addMulti<IDependency, Dependency1, di::SharedScope>();
+  container.addMulti<IDependency, Dependency2, di::SharedScope>();
+  container.add<IDependency, Dependency3, di::SharedScope>();
   container.add<VectorRefDependant>();
   auto vector = container.create<std::vector<std::shared_ptr<IDependency>>>();
   vector[0]->str() = "instance1";
@@ -1146,9 +1146,9 @@ BOOST_AUTO_TEST_CASE(DiDependantRefTest1)
 BOOST_AUTO_TEST_CASE(FactoryPurePureShared)
 {
   di::Container container;
-  container.add<FactoryResultPure, di::SharedPolicy>();
-  container.add<FactoryArg1, di::SharedPolicy>();
-  container.add<FactoryArg2, di::SharedPolicy>();
+  container.add<FactoryResultPure, di::SharedScope>();
+  container.add<FactoryArg1, di::SharedScope>();
+  container.add<FactoryArg2, di::SharedScope>();
   auto arg1 = container.createShared<FactoryArg1>();
   auto arg2 = container.createShared<FactoryArg2>();
   auto arg3 = std::make_shared<FactoryArg3>();
@@ -1184,9 +1184,9 @@ BOOST_AUTO_TEST_CASE(FactoryPurePureShared)
 BOOST_AUTO_TEST_CASE(FactoryPureSharedShared)
 {
   di::Container container;
-  container.add<FactoryResultPure, di::SharedPolicy>();
-  container.add<FactoryArg1, di::SharedPolicy>();
-  container.add<FactoryArg2, di::SharedPolicy>();
+  container.add<FactoryResultPure, di::SharedScope>();
+  container.add<FactoryArg1, di::SharedScope>();
+  container.add<FactoryArg2, di::SharedScope>();
   auto arg1 = container.createShared<FactoryArg1>();
   auto arg2 = container.createShared<FactoryArg2>();
   auto arg3 = std::make_shared<FactoryArg3>();
@@ -1222,9 +1222,9 @@ BOOST_AUTO_TEST_CASE(FactoryPureSharedShared)
 BOOST_AUTO_TEST_CASE(FactoryPureSharedUnique)
 {
   di::Container container;
-  container.add<FactoryResultPure, di::UniquePolicy>();
-  container.add<FactoryArg1, di::SharedPolicy>();
-  container.add<FactoryArg2, di::SharedPolicy>();
+  container.add<FactoryResultPure, di::UniqueScope>();
+  container.add<FactoryArg1, di::SharedScope>();
+  container.add<FactoryArg2, di::SharedScope>();
   auto arg1 = container.createShared<FactoryArg1>();
   auto arg2 = container.createShared<FactoryArg2>();
   auto arg3 = std::make_shared<FactoryArg3>();
@@ -1261,9 +1261,9 @@ BOOST_AUTO_TEST_CASE(FactoryPureSharedUnique)
 BOOST_AUTO_TEST_CASE(FactoryUnique)
 {
   di::Container container;
-  container.add<FactoryResultUnique, di::SharedPolicy>();
-  container.add<FactoryArg1, di::UniquePolicy>();
-  container.add<FactoryArg2, di::UniquePolicy>();
+  container.add<FactoryResultUnique, di::SharedScope>();
+  container.add<FactoryArg1, di::UniqueScope>();
+  container.add<FactoryArg2, di::UniqueScope>();
   auto arg3 = std::make_unique<FactoryArg3>();
   arg3->value = 3;  
   using Factory = std::function<FactoryResultUnique*(std::unique_ptr<FactoryArg3> arg3)>;
@@ -1278,9 +1278,9 @@ BOOST_AUTO_TEST_CASE(FactoryUnique)
 BOOST_AUTO_TEST_CASE(FactoryShared)
 {
   di::Container container;
-  container.add<FactoryResultShared, di::SharedPolicy>();
-  container.add<FactoryArg1, di::SharedPolicy>();
-  container.add<FactoryArg2, di::SharedPolicy>();
+  container.add<FactoryResultShared, di::SharedScope>();
+  container.add<FactoryArg1, di::SharedScope>();
+  container.add<FactoryArg2, di::SharedScope>();
   auto arg1 = container.createShared<FactoryArg1>();
   auto arg2 = container.createShared<FactoryArg2>();
   auto arg3 = std::make_shared<FactoryArg3>();
@@ -1310,6 +1310,69 @@ BOOST_AUTO_TEST_CASE(FactoryShared)
   {
     BOOST_TEST(true);
   }
+}
+struct kek
+{
+  int boo(double f, std::string qwe) const
+  {
+    return 0;
+  }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(UniqueFactory)
+{
+  di::Container container;
+  int depCounter = 0;
+  container.addFactory<IDependency, di::UniqueScope>([&depCounter]() {
+    ++depCounter;
+    return new Dependency1();
+  });
+  auto inst1 = container.createShared<IDependency>();
+  auto inst2 = container.createShared<IDependency>();
+  BOOST_TEST(depCounter == 2);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(SharedFactory)
+{
+  di::Container container;
+  int depCounter = 0;
+  container.addFactory<IDependency, di::SharedScope>([&depCounter]() {
+    ++depCounter;
+    return new Dependency1();
+  });
+  auto inst1 = container.createShared<IDependency>();
+  auto inst2 = container.createShared<IDependency>();
+  BOOST_TEST(depCounter == 1);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(FactoryDependency)
+{
+  di::Container container;
+  container.addFactory<IDependency, di::SharedScope>([]() {
+    return new Dependency1();
+  });
+  container.add<SharedPtrDependant>();
+  auto inst = container.createShared<SharedPtrDependant>();
+  BOOST_TEST(inst != nullptr);
+  BOOST_TEST(inst->dependency() != nullptr);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+BOOST_AUTO_TEST_CASE(FactoryChain)
+{
+  di::Container container;
+  container.addFactory<IDependency, di::SharedScope>([](di::Container*) {
+    return new Dependency1();
+  });
+  container.addFactory<di::SharedScope>([](std::shared_ptr<IDependency> d) {
+    return new SharedPtrDependant(d);
+  });
+  auto inst = container.createShared<SharedPtrDependant>();
+  BOOST_TEST(inst != nullptr);
+  BOOST_TEST(inst->dependency() != nullptr);
 }
 
 BOOST_AUTO_TEST_SUITE_END() // !DiTest

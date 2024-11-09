@@ -13,98 +13,130 @@ namespace yaga {
 namespace di {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename I, typename T, typename P>
-constexpr bool is_base_of = 
-  std::is_base_of_v<I, T> &&
-  std::is_base_of_v<Policy, P>;
+template <typename I, typename T, typename S>
+constexpr bool IsBaseOf =
+  (std::is_same_v<I, T> || std::is_base_of_v<I, T>) &&
+  std::is_base_of_v<Scope, S>;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 class Container
 {
 template <typename T, int N> friend struct CtorArg;
+template <int N> friend struct FunctorArg;
 template <typename T> friend struct LambdaHelper;
 
 public:
   /*
-   * @brief Registers the class `T` in the container, associating it with the interface `I` and using the policy `P`.
+   * @brief Registers the class `T` in the container, associating it with the interface `I` and using the scope `S`.
    *
    * @tparam I The interface type under which the class `T` is registered.
    * @tparam T The class type being registered, which must be derived from `I`.
-   * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
-   *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
    * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = false>
-  std::enable_if_t<di::is_base_of<I, T, P>, Container&> add();
+  template <typename I, typename T, typename S = UniqueScope, bool CallInit = false>
+  EnableIf<IsBaseOf<I, T, S>, Container&> add();
 
   /*
-   * @brief Registers the class `T` in the container using the policy `P`.
+   * @brief Registers the class `T` in the container using the scope `S`.
    *
    * @tparam T The class type being registered.
-   * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
-   *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
    * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename T, typename P = UniquePolicy, bool CallInit = false>
-  std::enable_if_t<di::is_base_of<T, T, P>, Container&> add();
+  template <typename T, typename S = UniqueScope, bool CallInit = false>
+  EnableIf<IsBaseOf<T, T, S>, Container&> add();
 
   /*
    * @brief Registers a provided instance of the class `T` in the container, associating it with the interface `I`.
    * 
-   * Unstance is registered under the `SharedPolicy`.
-   *
    * @tparam I The interface type under which the instance is registered.
    * @tparam T The class type of the provided instance, which must be derived from `I`.
    * @param instance A `std::shared_ptr` to the instance of `T` that will be registered.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename I, typename T>
-  std::enable_if_t<std::is_base_of_v<I, T>, Container&> add(std::shared_ptr<T> instance);
+  template <typename I, typename T, typename S = SharedScope>
+  EnableIf<IsBaseOf<I, T, S>, Container&> add(std::shared_ptr<T> instance);
 
   /*
    * @brief Registers a provided instance of the class `T` in the container.
    *
-   * Unstance is registered under the `SharedPolicy`.
-   * 
    * @tparam T The class type of the provided instance.
    * @param instance A `std::shared_ptr` to the instance of `T` that will be registered.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename T>
-  Container& add(const std::shared_ptr<T> instance);
+  template <typename T, typename S = SharedScope>
+  EnableIf<IsBaseOf<T, T, S>, Container&> add(std::shared_ptr<T> instance);
 
   /*
-   * @brief Registers the class `T` in the container, associating it with the interface `I` and using the policy `P`.
+   * @brief Registers a factory function in the container, associating it with the interface `I` and using the specified scope `S`.
+   * 
+   * The container will use the factory function to create instances of the interface type when requested.
+   * 
+   * @tparam I The interface type under which the factory function is registered.
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
+   * @tparam F The factory function type, which must return a pointer or a smart pointer to a type derived from `I`.
+   * @param functor The factory function that will create instances of `I`. The return type of `functor` should be a pointer 
+   *                or smart pointer to a type derived from `I`.
+   * @return Container& A reference to the container for method chaining.
+   */
+  template <typename I, typename S, typename F>
+  EnableIf<IsBaseOf<
+    I,
+    typename PointerTraits<typename FunctionTraits<F>::ReturnType>::ElementType,
+    S>,
+  Container&> addFactory(F functor);
+
+  /*
+   * @brief Registers a factory function in the container using the specified scope `S`.
+   * 
+   * The container will use the factory function to create instances of the type when requested.
+   * 
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
+   * @tparam F The factory function type, which must return a pointer or a smart pointer.
+   * @param functor The factory function that will create instances of `I`.
+   *                The return type of `functor` should be a pointer or a smart pointer.
+   * @return Container& A reference to the container for method chaining.
+   */
+  template <typename S, typename F>
+  Container& addFactory(F functor);
+
+  /*
+   * @brief Registers the class `T` in the container, associating it with the interface `I` and using the scope `S`.
    *
    * Unlike single registration methods, `addMulti` supports multiple classes being registered under the same interface `I`.
    * When using a constructor parameter of type `std::vector<I>`, all registered classes will be instantiated.
    *
    * @tparam I The interface type under which the class `T` is registered.
    * @tparam T The class type being registered, which must be derived from `I`.
-   * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
-   *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
    * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename I, typename T, typename P = UniquePolicy, bool CallInit = false>
-  std::enable_if_t<di::is_base_of<I, T, P>, Container&> addMulti();
+  template <typename I, typename T, typename S = UniqueScope, bool CallInit = false>
+  EnableIf<IsBaseOf<I, T, S>, Container&> addMulti();
 
   /*
-   * @brief Registers the class `T` in the container using the policy `P`.
+   * @brief Registers the class `T` in the container using the scope `S`.
    *
    * Unlike single registration methods, `addMulti` supports multiple classes being registered under the same interface `T`.
    * When using a constructor parameter of type `std::vector<T>`, all registered classes will be instantiated.
    *
    * @tparam T The class type being registered.
-   * @tparam P The policy type for object registration, defaulting to `UniquePolicy`.
-   *           Possible values: UniquePolicy, SharedPolicy, SharedImlpPolicy.
+   * @tparam S The scope type for object registration, defaulting to `UniqueScope`.
+   *           Possible values: UniqueScope, SharedScope, SharedImlpScope.
    * @tparam CallInit A boolean flag indicating whether to call the `init` method of `T` during instantiation, defaulting to false.
    * @return Container& A reference to the container for method chaining.
    */
-  template <typename T, typename P = UniquePolicy, bool CallInit = false>
-  std::enable_if_t<di::is_base_of<T, T, P>, Container&> addMulti();
+  template <typename T, typename S = UniqueScope, bool CallInit = false>
+  EnableIf<IsBaseOf<T, T, S>, Container&> addMulti();
 
   /*
    * @brief Creates an instance of the class `T` from the container, resolving dependencies.
@@ -155,26 +187,20 @@ private:
   T createImpl(Args* args);
 
   template <typename T>
-  std::enable_if_t<is_pointer<T>, T> createSpecial(Args* args);
+  EnableIf<IsPointer<T>, T> createSpecial(Args* args);
 
   template <typename T>
-  std::enable_if_t<is_function_v<T>, T> createSpecial(Args* args);
+  EnableIf<IsFunction<T>, T> createSpecial(Args* args);
 
   template <typename T>
-  std::enable_if_t<is_vector<T>, T> createSpecial(Args* args);
+  EnableIf<IsVector<T>, T> createSpecial(Args* args);
 
   template <typename T>
-  std::enable_if_t<
-    !is_vector<T>     &&
-    !is_function_v<T> &&
-    !is_pointer<T>
-  , T> createSpecial(Args* args);
-
-  template <typename Vector, typename T>
-  std::enable_if_t<is_pointer<T>, Container&> createSpecialMulti(Vector& vector, Args* args);
-
-  template <typename Vector, typename T>
-  std::enable_if_t<!is_pointer<T>, Container&> createSpecialMulti(Vector& vector, Args* args);
+  EnableIf<
+    !IsVector<T>     &&
+    !IsFunction<T> &&
+    !IsPointer<T>,
+  T> createSpecial(Args* args);
 
   template <typename T>
   void throwIfExists();

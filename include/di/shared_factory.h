@@ -10,10 +10,10 @@ namespace yaga {
 namespace di {
 
 template <typename I, typename T>
-class SharedFactory final : public Factory
+class SharedFactory : public Factory
 {
 public:
-  explicit SharedFactory(bool init, std::shared_ptr<T> instance = nullptr) : Factory(init), instance_(instance) {}
+  explicit SharedFactory(bool callInit = false, std::shared_ptr<T> instance = nullptr);
   
 protected:
   void* createPure(Container* container, Args* args) override;
@@ -26,19 +26,35 @@ protected:
 
   bool allowInstanceCreation() override { return false; }
 
-private:
   std::shared_ptr<T> getInstance(Container* container, Args* args);
 
-private:
+  virtual T* createInstance(Container* container, Args* args);
+
+protected:
   std::shared_ptr<T> instance_;
 };
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T>
+SharedFactory<I, T>::SharedFactory(bool callInit, std::shared_ptr<T> instance) :
+  Factory(callInit),
+  instance_(instance)
+{
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T>
+T* SharedFactory<I, T>::createInstance(Container* container, Args* args)
+{
+  return ObjectFactory::createPtr<T>(container, args, callInit_);
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
 std::shared_ptr<T> SharedFactory<I, T>::getInstance(Container* container, Args* args)
 {
   if (!instance_) {
-    instance_ = std::shared_ptr<T>(ObjectFactory::createPtr<T>(container, args, callInit_));
+    instance_ = std::shared_ptr<T>(createInstance(container, args));
   }
   return instance_;
 }

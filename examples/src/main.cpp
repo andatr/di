@@ -174,12 +174,12 @@ private:
 void main()
 {
   di::Container container;
-  container.add<IDatabase, MySQLDatabase, di::SharedPolicy, true>();
-  container.add<ILogger, ConsoleLogger, di::SharedPolicy>();
-  container.add<Invoice, di::UniquePolicy>();
-  container.addMulti<IService, UserService, di::UniquePolicy>();
-  container.addMulti<IService, ContractService, di::UniquePolicy>();
-  container.add<Application, di::UniquePolicy>();
+  container.add<IDatabase, MySQLDatabase, di::SharedScope, true>();
+  container.add<ILogger, ConsoleLogger, di::SharedScope>();
+  container.add<Invoice, di::UniqueScope>();
+  container.addMulti<IService, UserService, di::UniqueScope>();
+  container.addMulti<IService, ContractService, di::UniqueScope>();
+  container.add<Application, di::UniqueScope>();
 
   auto app = container.createUnique<Application>();
   app->run();

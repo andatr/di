@@ -31,56 +31,80 @@ struct LambdaHelper<std::function<Ret(Params...)>>
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename I, typename T, typename P, bool CallInit>
-std::enable_if_t<di::is_base_of<I, T, P>, Container&> Container::add()
+template <typename I, typename T, typename S, bool CallInit>
+EnableIf<IsBaseOf<I, T, S>, Container&> Container::add()
 {
-  using Interface = std::remove_cvref_t<I>;
+  using Interface = RemoveCVRef<I>;
   std::lock_guard<std::mutex> lock(factoryMutex_);
   throwIfExists<Interface>();
-  factories_[typeid(Interface)] = createFactory<P, I, T>(CallInit, &factoryContext_);
+  factories_[typeid(Interface)] = createFactory<S, I, T>(CallInit, &factoryContext_);
   return *this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename T, typename P, bool CallInit>
-std::enable_if_t<di::is_base_of<T, T, P>, Container&> Container::add()
+template <typename T, typename S, bool CallInit>
+EnableIf<IsBaseOf<T, T, S>, Container&> Container::add()
 {
-  return add<T, T, P, CallInit>();
+  return add<T, T, S, CallInit>();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename I, typename T>
-std::enable_if_t<std::is_base_of_v<I, T>, Container&> Container::add(std::shared_ptr<T> instance)
+template <typename I, typename T, typename S>
+EnableIf<IsBaseOf<I, T, S>, Container&> Container::add(std::shared_ptr<T> instance)
 {
-  using Interface = std::remove_cvref_t<I>;
+  using Interface = RemoveCVRef<I>;
   std::lock_guard<std::mutex> lock(factoryMutex_);
   throwIfExists<Interface>();
-  factories_[typeid(Interface)] = createFactory<SharedPolicy, I, T>(instance, &factoryContext_);
+  factories_[typeid(Interface)] = createFactory<S, I, T>(instance, &factoryContext_);
   return *this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-Container& Container::add(const std::shared_ptr<T> instance)
+template <typename T, typename S>
+EnableIf<IsBaseOf<T, T, S>, Container&> Container::add(std::shared_ptr<T> instance)
 {
-  return add<T, T>(instance);
+  return add<T, T, S>(instance);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename I, typename T, typename P, bool CallInit>
-std::enable_if_t<di::is_base_of<I, T, P>, Container&> Container::addMulti()
+template <typename I, typename S, typename F>
+EnableIf<IsBaseOf<
+  I,
+  typename PointerTraits<typename FunctionTraits<F>::ReturnType>::ElementType,
+  S>,
+Container&> Container::addFactory(F functor)
 {
-  using Interface = std::remove_cvref_t<I>;
+  using ReturnType = typename FunctionTraits<F>::ReturnType;
+  using T = typename PointerTraits<ReturnType>::ElementType;
+  throwIfExists<I>();
+  factories_[typeid(I)] = createFunctorFactory<S, I, T, F>(functor, &factoryContext_);
+  return *this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename S, typename F>
+Container& Container::addFactory(F functor)
+{
+  using ReturnType = typename FunctionTraits<F>::ReturnType;
+  using T = typename PointerTraits<ReturnType>::ElementType;
+  return addFactory<T, S, F>(functor);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T, typename S, bool CallInit>
+EnableIf<IsBaseOf<I, T, S>, Container&> Container::addMulti()
+{
+  using Interface = RemoveCVRef<I>;
   std::lock_guard<std::mutex> lock(factoryMutex_);
-  multiFactories_.emplace(typeid(Interface), createFactory<P, I, T>(CallInit, &factoryContext_));
+  multiFactories_.emplace(typeid(Interface), createFactory<S, I, T>(CallInit, &factoryContext_));
   return *this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename T, typename P, bool CallInit>
-std::enable_if_t<di::is_base_of<T, T, P>, Container&> Container::addMulti()
+template <typename T, typename S, bool CallInit>
+EnableIf<IsBaseOf<T, T, S>, Container&> Container::addMulti()
 {
-  return addMulti<T, T, P, CallInit>();
+  return addMulti<T, T, S, CallInit>();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -107,69 +131,49 @@ T Container::createImpl(Args* args)
     return std::forward<T>(args->get<T>(it));
   }
   if (auto factory = findFactory<T>(false)) {
-    return factory->template createObject<std::remove_cv_t<T>>(this, args);
+    return factory->template createObject<RemoveCV<T>>(this, args);
   }
   return createSpecial<T>(args);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_pointer<T>, T> Container::createSpecial(Args* args)
+EnableIf<IsPointer<T>, T> Container::createSpecial(Args* args)
 {
-  using E = typename pointer_traits<T>::element_type;
+  using E = typename PointerTraits<T>::ElementType;
   auto factory = findFactory<E>();
-  return factory->template createObject<std::remove_cv_t<T>>(this, args);
+  return factory->template createObject<RemoveCV<T>>(this, args);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_function_v<T>, T> Container::createSpecial(Args*)
+EnableIf<IsFunction<T>, T> Container::createSpecial(Args*)
 {
-  return LambdaHelper<std::remove_cvref_t<T>>::createLambda(this);
+  return LambdaHelper<RemoveCVRef<T>>::createLambda(this);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<is_vector<T>, T> Container::createSpecial(Args* args)
+EnableIf<IsVector<T>, T> Container::createSpecial(Args* args)
 {
-  using Vector = std::remove_cv_t<T>;
-  using Element = typename vector_traits<Vector>::element_type;
+  using Vector = RemoveCV<T>;
+  using VectorElement = typename VectorTraits<Vector>::ElementType;
+  using Element = typename PointerTraits<VectorElement>::ElementType;
   Vector result {};
-  createSpecialMulti<Vector, Element>(result, args);
+  auto range = multiFactories_.equal_range(typeid(Element));
+  for (decltype(range.first) it = range.first; it != range.second; ++it) {
+    result.push_back(it->second->template createObject<VectorElement>(this, args));
+  }
   if (result.empty()) THROW_NOT_REGISTERED;
   return result;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename Vector, typename T>
-std::enable_if_t<is_pointer<T>, Container&> Container::createSpecialMulti(Vector& vector, Args* args)
-{
-  using Element = std::remove_cvref_t<typename std::pointer_traits<T>::element_type>;
-  auto range = multiFactories_.equal_range(typeid(Element));
-  for (decltype(range.first) it = range.first; it != range.second; ++it) {
-    vector.push_back(it->second->template createObject<T>(this, args));
-  }
-  return *this;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename Vector, typename T>
-std::enable_if_t<!is_pointer<T>, Container&> Container::createSpecialMulti(Vector& vector, Args* args)
-{
-  using Element = std::remove_cvref_t<T>;
-  auto range = multiFactories_.equal_range(typeid(Element));
-  for (decltype(range.first) it = range.first; it != range.second; ++it) {
-    vector.push_back(it->second->template createObject<T>(this, args));
-  }
-  return *this;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-std::enable_if_t<
-  !is_vector<T>     &&
-  !is_function_v<T> &&
-  !is_pointer<T>
+EnableIf<
+  !IsVector<T> &&
+  !IsFunction<T> &&
+  !IsPointer<T>
 , T> Container::createSpecial(Args*)
 {
   THROW_NOT_REGISTERED;
@@ -179,7 +183,7 @@ std::enable_if_t<
 template <typename T>
 Factory* Container::findFactory(bool throwEx)
 {
-  auto it = factories_.find(typeid(std::remove_cvref_t<T>));
+  auto it = factories_.find(typeid(RemoveCVRef<T>));
   if (it == factories_.end()) {
     if (throwEx) THROW_NOT_REGISTERED;
     return nullptr;

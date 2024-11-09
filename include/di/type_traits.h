@@ -11,85 +11,118 @@ namespace yaga {
 namespace di {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-constexpr bool is_reference = std::is_reference_v<T>;
+template <bool T, typename R = void>
+using EnableIf = typename std::enable_if_t<T, R>;
 
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-struct shared_ptr_traits : std::false_type {};
+template <class T>
+using RemoveCV = typename std::remove_cv_t<T>;
 
-template <typename T>
-struct shared_ptr_traits<std::shared_ptr<T>> : std::true_type
-{
-  using element_type = T;
-};
+template <class T>
+using RemoveCVRef = typename std::remove_cvref_t<T>;
 
 template <typename T>
-constexpr bool is_shared_ptr = shared_ptr_traits<T>::value;
+constexpr bool IsReference = std::is_reference_v<T>;
 
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-struct unique_ptr_traits : std::false_type {};
-
-template <typename T>
-struct unique_ptr_traits<std::unique_ptr<T>> : std::true_type
-{
-  using element_type = T;
-};
-
-template <typename T>
-constexpr bool is_unique_ptr = unique_ptr_traits<T>::value;
-
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-struct vector_traits : std::false_type {};
-
-template <typename T>
-struct vector_traits<std::vector<T>> : std::true_type
-{
-  using element_type = T;
-};
-
-template <typename T>
-constexpr bool is_vector = vector_traits<std::remove_cv_t<T>>::value;
-
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-struct pointer_traits
-{
-  using element_type = typename std::pointer_traits<T>::element_type;
-};
-
-template <typename T>
-struct pointer_traits<T&>
-{
-  using element_type = T;
-};
-
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-constexpr bool is_pure_ptr = std::is_pointer_v<T>;
-
-// -----------------------------------------------------------------------------------------------------------------------------
-template <typename T>
-constexpr bool is_pointer =
-  di::is_pure_ptr<T> ||
-  di::is_unique_ptr<T> ||
-  di::is_shared_ptr<T>;
-
-// -----------------------------------------------------------------------------------------------------------------------------
 template <typename T, typename U>
-constexpr bool is_same = std::is_same_v<std::remove_cvref_t<T>, std::remove_cvref_t<U>>;
+constexpr bool IsSame = std::is_same_v<RemoveCVRef<T>, RemoveCVRef<U>>;
+
+template <typename T>
+constexpr bool IsPurePtr = std::is_pointer_v<T>;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct SharedPtrTraits : std::false_type {};
+
+template <typename T>
+struct SharedPtrTraits<std::shared_ptr<T>> : std::true_type
+{
+  using ElementType = T;
+};
+
+template <typename T>
+constexpr bool IsSharedPtr = SharedPtrTraits<T>::value;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct UniquePtrTraits : std::false_type {};
+
+template <typename T>
+struct UniquePtrTraits<std::unique_ptr<T>> : std::true_type
+{
+  using ElementType = T;
+};
+
+template <typename T>
+constexpr bool IsIniquePtr = UniquePtrTraits<T>::value;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct VectorTraits : std::false_type {};
+
+template <typename T>
+struct VectorTraits<std::vector<T>> : std::true_type
+{
+  using ElementType = T;
+};
+
+template <typename T>
+constexpr bool IsVector = VectorTraits<RemoveCV<T>>::value;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct PointerTraits
+{
+  using ElementType = RemoveCVRef<typename std::pointer_traits<T>::element_type>;
+};
+
+template <typename T>
+struct PointerTraits<T&>
+{
+  using ElementType = RemoveCVRef<T>;
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+constexpr bool IsPointer =
+  IsPurePtr<T> ||
+  IsIniquePtr<T> ||
+  IsSharedPtr<T>;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-struct is_function : std::false_type {};
+struct IsFunctionT : std::false_type {};
 
 template<typename Ret, typename... Args>
-struct is_function<std::function<Ret(Args...)>> : std::true_type {};
+struct IsFunctionT<std::function<Ret(Args...)>> : std::true_type {};
 
 template<typename T>
-inline constexpr bool is_function_v = is_function<T>::value;
+inline constexpr bool IsFunction = IsFunctionT<T>::value;
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename T>
+struct FunctionTraits;
+
+template <typename Ret, typename... Args>
+struct FunctionTraits<Ret(Args...)> {
+  using ReturnType = Ret;
+  using ArgumentTypes = std::tuple<Args...>;
+  static constexpr std::size_t Arity = sizeof...(Args);
+};
+
+template <typename Ret, typename... Args>
+struct FunctionTraits<Ret(*)(Args...)> : FunctionTraits<Ret(Args...)> {};
+
+template <typename Ret, typename... Args>
+struct FunctionTraits<std::function<Ret(Args...)>> : FunctionTraits<Ret(Args...)> {};
+
+template <typename ClassType, typename Ret, typename... Args>
+struct FunctionTraits<Ret(ClassType::*)(Args...)> : FunctionTraits<Ret(Args...)> {};
+
+template <typename ClassType, typename Ret, typename... Args>
+struct FunctionTraits<Ret(ClassType::*)(Args...) const> : FunctionTraits<Ret(Args...)> {};
+
+template <typename Functor>
+struct FunctionTraits : FunctionTraits<decltype(&Functor::operator())> {};
 
 } // !namespace di
 } // !namespace yaga

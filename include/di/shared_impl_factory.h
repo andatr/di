@@ -19,10 +19,10 @@ struct SharedImlpFactoryContext
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
-class SharedImlpFactory final : public Factory
+class SharedImlpFactory : public Factory
 {
 public:
-  explicit SharedImlpFactory(bool init, FactoryContext* context);
+  explicit SharedImlpFactory(FactoryContext* context, bool callInit = false, std::shared_ptr<T> instance = nullptr);
 
 protected:
   void* createPure(Container* container, Args* args) override;
@@ -35,19 +35,23 @@ protected:
 
   bool allowInstanceCreation() override { return false; }
 
-private:
   std::shared_ptr<T> getInstance(Container* container, Args* args);
 
-private:
+  virtual T* createInstance(Container* container, Args* args);
+
+protected:
   SharedImlpFactoryContext* context_;
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T>
-SharedImlpFactory<I, T>::SharedImlpFactory(bool init, FactoryContext* context) :
-  Factory(init),
-  context_(context->get<SharedImlpFactoryContext>())
+SharedImlpFactory<I, T>::SharedImlpFactory(FactoryContext* context, bool callInit, std::shared_ptr<T> instance) :
+  Factory(callInit),
+  context_(context->get<SharedImlpFactoryContext>()) 
 {
+  if (instance) {
+    context_->instances[typeid(T)] = instance;
+  }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -55,10 +59,17 @@ template <typename I, typename T>
 std::shared_ptr<T> SharedImlpFactory<I, T>::getInstance(Container* container, Args* args)
 {
   auto it = context_->instances.find(typeid(T));
-  if (it != context_->instances.end()) return std::static_pointer_cast<T>(it->second);
-  auto instance = std::shared_ptr<T>(ObjectFactory::createPtr<T>(container, args, callInit_));
+  if (it != context_->instances.end() && it->second) return std::static_pointer_cast<T>(it->second);
+  auto instance = std::shared_ptr<T>(createInstance(container, args));
   context_->instances[typeid(T)] = instance;
   return std::static_pointer_cast<T>(instance);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename I, typename T>
+T* SharedImlpFactory<I, T>::createInstance(Container* container, Args* args)
+{
+  return ObjectFactory::createPtr<T>(container, args, callInit_);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

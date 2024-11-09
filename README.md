@@ -58,13 +58,23 @@ Here is a table of allowed types for each policy:
 ```
 Policies can be easily extended by creating a new empty structure that inherits from `Policy` along with a corresponding factory class.
 
-5. Sometimes, full object initialization can’t be achieved in the constructor alone.
+4. If class creation is complex, a factory functor can be registered using the `addFactory` method.
+The factory will be called each time a new instance is needed, providing full control over object instantiation.
+An optional interface type `I` can be specified to register the factory under that interface; if omitted, the return type of the factory will be used.
+Factory functors can also accept arguments (including `Container` itself) that will be resolved and instantiated from the container as needed.
+
+4. If the class creation code is not trivial a class factory can be registered using `addFactory` method.
+This factory functor will be invoked each type a new instance of the class is required.
+Optional interface type `I` can be specified during factory registration; if it's omited the return type of the functor will be used as an interface.
+Functor can accept argument, `Container` included: they will be automatically instantinated from the container if needed.
+
+6. Sometimes, full object initialization can’t be achieved in the constructor alone.
 For instance, you may want to implement virtual behavior during initialization, which typically requires a separate init() method to complete the setup.
 Although considered an anti-pattern today, this approach was common in the past.
 This library can accommodate this pattern by automatically calling an init() method if it’s defined in your class.
 You can enable this behavior by passing a special flag during object creation.
 
-6. Another common scenario arises when you want to instantiate a factory rather than a specific class.
+7. Another common scenario arises when you want to instantiate a factory rather than a specific class.
 In such cases, you may only provide a subset of the required arguments, while the remaining dependencies should be instantiated from the container.
 Typically, this can be accomplished by registering the factory in the container.
 This library simplifies this process: if you attempt to instantiate a `std::function` without registering it, the library will automatically generate the function for you.
@@ -85,7 +95,7 @@ auto invoiceFactory = container.create<std::function<Invoice*(int)>>();
 Invoice* invoice = invoiceFactory(123); // Logger* logger is instantinated automatically
 ```
 
-7. The last feature worth mentioning is the ability to register multiple classes under the same interface and instantiate them using `std::vector`.
+8. The last feature worth mentioning is the ability to register multiple classes under the same interface and instantiate them using `std::vector`.
 Imagine you have an application that supports plugins through an `IPlugin` interface and you want to pass all of them to your `Application` class.
 This is the situation when you want to use this feature: you register all your plugins under the `IPlugin` interface and then introduce a `std::vector<IPlugin>` argument for your `Application` class.
 

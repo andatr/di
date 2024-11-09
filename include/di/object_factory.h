@@ -22,12 +22,12 @@ public:
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template<typename U>
-constexpr auto is_creatable(int) -> decltype(std::declval<Container>().template create<U>(), true) {
+constexpr auto IsCreatable(int) -> decltype(std::declval<Container>().template create<U>(), true) {
   return true;
 }
 
 template<typename U>
-constexpr auto is_creatable(...) -> bool {
+constexpr auto IsCreatable(...) -> bool {
   return false;
 }
 
@@ -35,12 +35,12 @@ constexpr auto is_creatable(...) -> bool {
 template <typename T, int N>
 struct CtorArg
 {
-  template <typename U, typename = typename std::enable_if_t<!is_same<T, U> && is_creatable<U>(0)>>
+  template <typename U, typename = typename EnableIf<!IsSame<T, U> && IsCreatable<U>(0)>>
   operator U() { return container_->createImpl<U>(args_); }
 
   operator Container*() { return container_; }
 
-  template <typename U, typename = typename std::enable_if_t<!is_same<T, U> && !is_creatable<U>(0)>>
+  template <typename U, typename = typename EnableIf<!IsSame<T, U> && !IsCreatable<U>(0)>>
   operator U&() { return container_->createImpl<U&>(args_); }
 
   operator Container&() { return *container_; }
@@ -127,6 +127,53 @@ T* ObjectFactory::createPtr(Container* container, Args* args, bool callInit)
 {
   using H = ObjectFactoryPtrHelper<T, std::make_integer_sequence<int, countCtorArgs<T>(0)>>;
   return H::createPtr(container, args, callInit);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <int N>
+struct FunctorArg
+{
+  template <typename U, typename = typename EnableIf<IsCreatable<U>(0)>>
+  operator U() { return container_->createImpl<U>(nullptr); }
+
+  operator Container*() { return container_; }
+
+  template <typename U, typename = typename EnableIf<!IsCreatable<U>(0)>>
+  operator U&() { return container_->createImpl<U&>(nullptr); }
+
+  operator Container&() { return *container_; }
+
+  Container* container_;
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename F, typename U>
+struct FunctorInvokerHelper;
+
+template <typename F, int... N>
+struct FunctorInvokerHelper<F, std::integer_sequence<int, N...>>
+{
+  using T = typename FunctionTraits<F>::ReturnType;
+  static T invoke(F functor, Container* container) { 
+    (void)container;
+    return functor(FunctorArg<N>{ container }...);
+  }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+class FunctorInvoker
+{
+public:
+  template <typename F>
+  static typename FunctionTraits<F>::ReturnType invoke(F functor, Container* container);
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------
+template <typename F>
+typename FunctionTraits<F>::ReturnType FunctorInvoker::invoke(F functor, Container* container)
+{
+  using H = FunctorInvokerHelper<F, std::make_integer_sequence<int, FunctionTraits<F>::Arity>>;
+  return H::invoke(functor, container);
 }
 
 } // !namespace di
