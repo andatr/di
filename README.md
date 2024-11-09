@@ -58,15 +58,10 @@ Here is a table of allowed types for each policy:
 ```
 Policies can be easily extended by creating a new empty structure that inherits from `Policy` along with a corresponding factory class.
 
-4. If class creation is complex, a factory functor can be registered using the `addFactory` method.
+5. If class creation is complex, a factory functor can be registered using the `addFactory` method.
 The factory will be called each time a new instance is needed, providing full control over object instantiation.
 An optional interface type `I` can be specified to register the factory under that interface; if omitted, the return type of the factory will be used.
 Factory functors can also accept arguments (including `Container` itself) that will be resolved and instantiated from the container as needed.
-
-4. If the class creation code is not trivial a class factory can be registered using `addFactory` method.
-This factory functor will be invoked each type a new instance of the class is required.
-Optional interface type `I` can be specified during factory registration; if it's omited the return type of the functor will be used as an interface.
-Functor can accept argument, `Container` included: they will be automatically instantinated from the container if needed.
 
 6. Sometimes, full object initialization can’t be achieved in the constructor alone.
 For instance, you may want to implement virtual behavior during initialization, which typically requires a separate init() method to complete the setup.

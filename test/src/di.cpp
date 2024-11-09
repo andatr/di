@@ -1311,13 +1311,6 @@ BOOST_AUTO_TEST_CASE(FactoryShared)
     BOOST_TEST(true);
   }
 }
-struct kek
-{
-  int boo(double f, std::string qwe) const
-  {
-    return 0;
-  }
-};
 
 // -----------------------------------------------------------------------------------------------------------------------------
 BOOST_AUTO_TEST_CASE(UniqueFactory)
