@@ -23,14 +23,14 @@ protected:
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T, typename F>
 SharedImlpFunctorFactory<I, T, F>::SharedImlpFunctorFactory(FactoryContext* context, F functor) :
-  SharedImlpFactory(context),
+  SharedImlpFactory<I, T>(context),
   functor_(functor)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename I, typename T, typename F>
-T* SharedImlpFunctorFactory<I, T, F>::createInstance(Container* container, Args* args)
+T* SharedImlpFunctorFactory<I, T, F>::createInstance(Container* container, Args*)
 {
   return FunctorInvoker::invoke<F>(functor_, container);
 }

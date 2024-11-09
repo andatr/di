@@ -5,6 +5,7 @@
 #include <utility>
 
 #include "di/container.h"
+#include "di/type_traits.h"
 
 namespace yaga {
 namespace di {
