@@ -36,12 +36,12 @@ constexpr auto IsCreatable(...) -> bool {
 template <typename T, int N>
 struct CtorArg
 {
-  template <typename U, typename = typename EnableIf<!IsSame<T, U> && IsCreatable<U>(0)>>
+  template <typename U, typename = EnableIf<!IsSame<T, U> && IsCreatable<U>(0)>>
   operator U() { return container_->createImpl<U>(args_); }
 
   operator Container*() { return container_; }
 
-  template <typename U, typename = typename EnableIf<!IsSame<T, U> && !IsCreatable<U>(0)>>
+  template <typename U, typename = EnableIf<!IsSame<T, U> && !IsCreatable<U>(0)>>
   operator U&() { return container_->createImpl<U&>(args_); }
 
   operator Container&() { return *container_; }
@@ -134,12 +134,12 @@ T* ObjectFactory::createPtr(Container* container, Args* args, bool callInit)
 template <int N>
 struct FunctorArg
 {
-  template <typename U, typename = typename EnableIf<IsCreatable<U>(0)>>
+  template <typename U, typename = EnableIf<IsCreatable<U>(0)>>
   operator U() { return container_->createImpl<U>(nullptr); }
 
   operator Container*() { return container_; }
 
-  template <typename U, typename = typename EnableIf<!IsCreatable<U>(0)>>
+  template <typename U, typename = EnableIf<!IsCreatable<U>(0)>>
   operator U&() { return container_->createImpl<U&>(nullptr); }
 
   operator Container&() { return *container_; }
